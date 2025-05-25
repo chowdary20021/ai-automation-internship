@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Cloud, Sun, CloudRain, Mail, User, MapPin, ExternalLink, Github, Linkedin } from "lucide-react";
-
 const Index = () => {
   const [formData, setFormData] = useState({
     fullName: '',
@@ -15,25 +13,28 @@ const Index = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    const {
+      name,
+      value
+    } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!formData.fullName || !formData.email || !formData.city) {
       toast({
         title: "Please fill in all fields",
         description: "All fields are required to get your weather report.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
@@ -44,40 +45,39 @@ const Index = () => {
       toast({
         title: "Invalid email format",
         description: "Please enter a valid email address.",
-        variant: "destructive",
+        variant: "destructive"
       });
       return;
     }
-
     setIsLoading(true);
     console.log("Form submitted with data:", formData);
-
     try {
       // Simulate API call - replace with actual webhook URL
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
       setSubmitted(true);
       toast({
         title: "Weather report requested!",
-        description: "Your personalized weather summary will be sent to your email shortly.",
+        description: "Your personalized weather summary will be sent to your email shortly."
       });
-      
+
       // Reset form
-      setFormData({ fullName: '', email: '', city: '' });
+      setFormData({
+        fullName: '',
+        email: '',
+        city: ''
+      });
     } catch (error) {
       console.error("Error submitting form:", error);
       toast({
         title: "Something went wrong",
         description: "Please try again later or contact support.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header Section */}
       <header className="text-center pt-12 pb-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -110,8 +110,7 @@ const Index = () => {
                 </p>
               </div>
 
-              {submitted ? (
-                <div className="text-center py-8">
+              {submitted ? <div className="text-center py-8">
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CloudRain className="w-8 h-8 text-green-600" />
                   </div>
@@ -121,31 +120,16 @@ const Index = () => {
                   <p className="text-gray-600">
                     Check your inbox in a few minutes for your personalized weather report.
                   </p>
-                  <Button 
-                    onClick={() => setSubmitted(false)}
-                    variant="outline"
-                    className="mt-4"
-                  >
+                  <Button onClick={() => setSubmitted(false)} variant="outline" className="mt-4">
                     Submit Another Request
                   </Button>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+                </div> : <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 flex items-center gap-2">
                       <User className="w-4 h-4" />
                       Full Name
                     </Label>
-                    <Input
-                      id="fullName"
-                      name="fullName"
-                      type="text"
-                      value={formData.fullName}
-                      onChange={handleInputChange}
-                      placeholder="Enter your full name"
-                      className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-                      required
-                    />
+                    <Input id="fullName" name="fullName" type="text" value={formData.fullName} onChange={handleInputChange} placeholder="Enter your full name" className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400" required />
                   </div>
 
                   <div className="space-y-2">
@@ -153,16 +137,7 @@ const Index = () => {
                       <Mail className="w-4 h-4" />
                       Email Address
                     </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="your.email@example.com"
-                      className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-                      required
-                    />
+                    <Input id="email" name="email" type="email" value={formData.email} onChange={handleInputChange} placeholder="your.email@example.com" className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400" required />
                   </div>
 
                   <div className="space-y-2">
@@ -170,34 +145,16 @@ const Index = () => {
                       <MapPin className="w-4 h-4" />
                       City
                     </Label>
-                    <Input
-                      id="city"
-                      name="city"
-                      type="text"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      placeholder="Enter your city name"
-                      className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400"
-                      required
-                    />
+                    <Input id="city" name="city" type="text" value={formData.city} onChange={handleInputChange} placeholder="Enter your city name" className="h-12 text-base border-gray-200 focus:border-blue-400 focus:ring-blue-400" required />
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium text-base rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <div className="flex items-center gap-2">
+                  <Button type="submit" className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium text-base rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg" disabled={isLoading}>
+                    {isLoading ? <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         Processing...
-                      </div>
-                    ) : (
-                      "Get Weather Update"
-                    )}
+                      </div> : "Get Weather Update"}
                   </Button>
-                </form>
-              )}
+                </form>}
             </CardContent>
           </Card>
         </div>
@@ -231,26 +188,18 @@ const Index = () => {
       <footer className="bg-gray-50 border-t border-gray-200 py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-gray-600 mb-4">
-            Built with ❤️ by <span className="font-semibold text-gray-800">[Your Name]</span>
+            Built with ❤️ by <span className="font-semibold text-gray-800">[Bollineni Narendra Chowdary]</span>
           </p>
           <p className="text-gray-500 mb-4">
-            Email: <a href="mailto:your.email@example.com" className="text-blue-600 hover:text-blue-700 transition-colors">
-              your.email@example.com
-            </a>
+            Email: <a href="mailto:your.email@example.com" className="text-blue-600 hover:text-blue-700 transition-colors">narendrabollineni@gmail.com</a>
           </p>
           <div className="flex justify-center space-x-4">
-            <a 
-              href="#" 
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
+            <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
               <Github className="w-4 h-4" />
               GitHub
               <ExternalLink className="w-3 h-3" />
             </a>
-            <a 
-              href="#" 
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
-            >
+            <a href="#" className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors">
               <Linkedin className="w-4 h-4" />
               LinkedIn
               <ExternalLink className="w-3 h-3" />
@@ -258,8 +207,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
