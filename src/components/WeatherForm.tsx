@@ -59,7 +59,25 @@ export const WeatherForm: React.FC<WeatherFormProps> = ({ onSubmissionSuccess })
     console.log("Form submitted with data:", formData);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // n8n webhook URL - update port if your n8n instance runs on a different port
+      const webhookUrl = "https://asdfghjkqwertyui.app.n8n.cloud/webhook/weather-report";
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          email: formData.email,
+          city: formData.city
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       onSubmissionSuccess();
       toast({
         title: "Weather report requested!",
