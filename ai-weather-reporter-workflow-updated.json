@@ -1,0 +1,528 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🚀 Enhanced Setup Instructions for AI Weather Reporter\n\n### 1. WeatherAPI.com Setup\n- Sign up at https://www.weatherapi.com/signup.aspx\n- Get your free API key from dashboard\n- Add to Environment Variables: `WEATHER_API_KEY`\n- Free tier: 1M calls/month\n\n### 2. Enhanced Supabase Database Setup\n📁 **Execute SQL file: `supabase-setup.sql`**\n- Open Supabase SQL Editor\n- Copy & paste contents from supabase-setup.sql\n- Run all commands to create table + indexes\n- Configure Supabase credentials in n8n credential manager\n- Project URL: nhjodtpylsnbazuipwvc.supabase.co\n- Use native Supabase node for better integration\n\n### 3. OpenRouter AI Setup\n- Sign up at https://openrouter.ai/\n- Get API key and add to Environment Variables: `OPENROUTER_API_KEY`\n- Model: google/gemini-flash-1.5 (fast & affordable)\n\n### 4. Gmail OAuth2 Setup (Enhanced Security)\n- Enable Gmail API in Google Cloud Console\n- Create OAuth2 credentials (Client ID + Secret)\n- Add redirect URI: `http://localhost:5678/rest/oauth2-credential/callback`\n- Configure Gmail credential in n8n with OAuth2 flow\n- Required scope: `https://www.googleapis.com/auth/gmail.send`",
+        "height": 960,
+        "width": 650
+      },
+      "id": "630f1509-0288-4af2-8f30-1ff9b7ed1ab0",
+      "name": "📋 Enhanced Setup Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -840,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔗 Webhook Information\n\n**Expected POST Data:**\n```json\n{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"city\": \"New York\"\n}\n```\n\n**Testing:**\nUse this webhook URL in your frontend form or test with Postman/curl.\n\n**Enhanced Response:** JSON with detailed success/error status and improved error handling",
+        "height": 400,
+        "width": 380
+      },
+      "id": "eab3a584-e83c-455b-ad8e-870790c4f4aa",
+      "name": "🔗 Webhook Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "weather-report",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "920deac8-58b6-48e1-af5a-b2645abad786",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        300
+      ],
+      "webhookId": "weather-report-webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "email-validation",
+              "leftValue": "={{ $json.body.email }}",
+              "rightValue": "@",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ba83fd01-1121-44d0-a6de-5cd2fc902481",
+      "name": "Email Validation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=http://api.weatherapi.com/v1/current.json?key=cfbc5c365041448d906142604252505&q={{ $json.body.city }}&aqi=yes",
+        "options": {}
+      },
+      "id": "06495018-3384-46e6-a052-58f3f6497b8a",
+      "name": "Fetch Weather Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the original webhook data from the first item\nconst webhookData = $('Webhook').first().json.body;\n// Get the weather response from current input\nconst weather = $input.first().json;\n\n// Check if weather fetch was successful\nconst weather_fetch_success = weather.current ? true : false;\n\nif (weather_fetch_success) {\n  return {\n    json: {\n      name: webhookData.fullName,\n      email: webhookData.email,\n      city: webhookData.city,\n      temperature: Math.round(weather.current.temp_c),\n      condition: weather.current.condition.text,\n      aqi: weather.current.air_quality ? Math.round(weather.current.air_quality.pm2_5) : null,\n      timestamp: new Date().toISOString(),\n      email_valid: true,\n      weather_fetch_success: true\n    }\n  };\n} else {\n  return {\n    json: {\n      name: webhookData.fullName,\n      email: webhookData.email,\n      city: webhookData.city,\n      temperature: null,\n      condition: null,\n      aqi: null,\n      timestamp: new Date().toISOString(),\n      email_valid: true,\n      weather_fetch_success: false\n    }\n  };\n}"
+      },
+      "id": "4de3dc5d-47da-4c3f-b908-9ad04433df0a",
+      "name": "Process Weather Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "weather_reports",
+        "dataToSend": "autoMapInputData"
+      },
+      "id": "5a57acda-0353-4ca6-a47e-863a3735b1e2",
+      "name": "Store Initial Data",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        120,
+        300
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ur7gtiGXUbgMtBAi",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a helpful weather assistant. Provide brief, friendly commentary about weather conditions in 1-2 sentences. Be encouraging and mention any relevant tips.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"The weather in {{ $('Process Weather Data').first().json.city }} is {{ $('Process Weather Data').first().json.condition }} with a temperature of {{ $('Process Weather Data').first().json.temperature }}°C{{ $('Process Weather Data').first().json.aqi ? ' and air quality PM2.5 of ' + $('Process Weather Data').first().json.aqi + ' μg/m³' : '' }}. Give me a brief, friendly comment about this weather.\"\n    }\n  ],\n  \"max_tokens\": 150,\n  \"temperature\": 0.7\n}",
+        "options": {}
+      },
+      "id": "c3728339-1594-4bab-8155-bd18a3285884",
+      "name": "Generate AI Commentary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first().json;\nlet ai_commentary;\n\n// Try to extract AI commentary from response, with fallback\ntry {\n  if (inputData.choices && inputData.choices[0] && inputData.choices[0].message) {\n    ai_commentary = inputData.choices[0].message.content.trim();\n  } else {\n    throw new Error('No AI response available');\n  }\n} catch (error) {\n  // Fallback commentary based on temperature - get from the Process Weather Data node\n  const weatherData = $('Process Weather Data').first().json;\n  const temp = weatherData.temperature;\n  const condition = weatherData.condition;\n  \n  if (temp <= 0) {\n    ai_commentary = \"Bundle up! It's freezing out there. Perfect weather for hot cocoa and staying cozy indoors.\";\n  } else if (temp <= 10) {\n    ai_commentary = \"Quite chilly today! A warm jacket and scarf would be your best friends.\";\n  } else if (temp <= 20) {\n    ai_commentary = \"Pleasant and mild weather. Great for a comfortable walk or outdoor activities!\";\n  } else if (temp <= 30) {\n    ai_commentary = \"Lovely warm weather! Perfect for spending time outdoors and soaking up some sun.\";\n  } else {\n    ai_commentary = \"Quite hot today! Stay hydrated, seek shade, and keep cool. Early morning or evening might be better for outdoor activities.\";\n  }\n}\n\n// Get the original data from Process Weather Data node and the record ID from Store Initial Data\nconst originalData = $('Process Weather Data').first().json;\nconst storedData = $('Store Initial Data').first().json;\n\nreturn {\n  json: {\n    ...originalData,\n    id: storedData.id, // Include the record ID from the database\n    email_sent: storedData.email_sent || false, // Include email_sent status\n    ai_commentary: ai_commentary\n  }\n};"
+      },
+      "id": "4ca217a9-2b41-4d2e-8ef6-ff9fba521c00",
+      "name": "Process AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        200
+      ]
+    },
+
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "weather_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "ai_commentary",
+              "fieldValue": "={{ $json.ai_commentary }}"
+            }
+          ]
+        }
+      },
+      "id": "cc4eb676-f9f1-4547-b8dd-165f793003b2",
+      "name": "Store AI Commentary",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ur7gtiGXUbgMtBAi",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "🌤 Your Personal Weather Report for {{ $json.city }}",
+        "message": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <style>\n        body { font-family: 'Arial', sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; }\n        .container { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }\n        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }\n        .header h1 { margin: 0; font-size: 2.2em; font-weight: 300; }\n        .header p { margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1em; }\n        .content { padding: 40px 30px; }\n        .greeting { font-size: 1.1em; margin-bottom: 25px; }\n        .weather-card { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 30px; border-radius: 12px; margin: 25px 0; text-align: center; border: 1px solid #dee2e6; }\n        .temp { font-size: 3.5em; font-weight: bold; color: #667eea; margin: 0; }\n        .condition { font-size: 1.4em; color: #495057; margin: 15px 0; text-transform: capitalize; }\n        .aqi { padding: 15px 20px; border-radius: 8px; margin: 20px 0; font-weight: 500; }\n        .aqi-good { background: #d1f2eb; color: #0d7a5f; border: 1px solid #7dcea0; }\n        .aqi-moderate { background: #fef9e7; color: #b7950b; border: 1px solid #f4d03f; }\n        .aqi-unhealthy { background: #fadbd8; color: #a93226; border: 1px solid #ec7063; }\n        .ai-comment { background: #e8f4fd; padding: 25px; border-left: 5px solid #3498db; margin: 25px 0; border-radius: 0 8px 8px 0; }\n        .ai-comment-header { font-weight: bold; color: #2980b9; margin-bottom: 10px; font-size: 1.1em; }\n        .footer { text-align: center; margin-top: 40px; padding-top: 25px; border-top: 1px solid #eee; color: #666; }\n        .footer p { margin: 5px 0; }\n        .footer small { color: #999; }\n        .city-name { color: #667eea; font-weight: 600; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🌤 Weather Report</h1>\n            <p>Personal weather summary for {{ $json.name }}</p>\n        </div>\n        \n        <div class=\"content\">\n            <div class=\"greeting\">Hi {{ $json.name }},</div>\n            \n            <p>Thanks for requesting your personalized weather report! Here's the current weather information for <span class=\"city-name\">{{ $json.city }}</span>:</p>\n            \n            <div class=\"weather-card\">\n                <div class=\"temp\">{{ $json.temperature }}°C</div>\n                <div class=\"condition\">{{ $json.condition }}</div>\n                \n                {{ $json.aqi ? '<div class=\"aqi ' + ($json.aqi <= 50 ? 'aqi-good' : $json.aqi <= 100 ? 'aqi-moderate' : 'aqi-unhealthy') + '\">🌬️ Air Quality (PM2.5): ' + $json.aqi + ' μg/m³ - ' + ($json.aqi <= 50 ? 'Good' : $json.aqi <= 100 ? 'Moderate' : 'Unhealthy') + '</div>' : '' }}\n            </div>\n            \n            <div class=\"ai-comment\">\n                <div class=\"ai-comment-header\">💬 AI Weather Insight</div>\n                {{ $json.ai_commentary }}\n            </div>\n            \n            <p>Stay safe and have a wonderful day!</p>\n            \n            \n            <div class=\"footer\">\n                <p><strong>Automated Weather Report System</strong></p>\n                <p>Built with ❤️ by <strong>Bollineni Narendra Chowdary</strong></p>\n                <small>Powered by WeatherAPI.com • n8n Automation • OpenRouter AI • Gmail</small>\n            </div>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {
+          "executeOnlyIf": "={{ ($json.email_sent === false) || ($json.email_sent === null) || ($json.email_sent === undefined) }}"
+        }
+      },
+      "id": "f34fbdd1-6cf3-4b00-af07-027169417b07",
+      "name": "Send Weather Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        200
+      ],
+      "webhookId": "fc20c2e0-7a7b-418d-ba38-7ff4368fad49",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "t2TQLI3d1qBqVwFx",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": true,\n  \"message\": \"Weather report sent successfully!\",\n  \"data\": {\n    \"email\": \"{{ $json.email }}\",\n    \"city\": \"{{ $json.city }}\",\n    \"temperature\": {{ $json.temperature }},\n    \"condition\": \"{{ $json.condition }}\",\n    \"timestamp\": \"{{ $json.timestamp }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "bd8ab8cb-10f4-4a16-ada4-ea51eabf5ff5",
+      "name": "Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the Gmail response from current input\nconst gmailResponse = $input.first().json;\n\n// Get the original record data from Store AI Commentary node\nconst originalData = $('Store AI Commentary').first().json;\n\n// Merge Gmail response with original record data\nreturn {\n  json: {\n    ...originalData,  // Preserve all original data including the Supabase record ID\n    gmail_message_id: gmailResponse.id,  // Add Gmail tracking ID for reference\n    gmail_thread_id: gmailResponse.threadId,  // Add Gmail thread ID\n    email_delivery_status: 'sent'  // Mark as successfully sent\n  }\n};"
+      },
+      "id": "preserve-record-id-node",
+      "name": "Preserve Record ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "weather_reports",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email_sent",
+              "fieldValue": true
+            }
+          ]
+        }
+      },
+      "id": "mark-email-sent-node",
+      "name": "Mark Email as Sent",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "Ur7gtiGXUbgMtBAi",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"Email has already been sent for this weather request.\",\n  \"data\": {\n    \"email\": \"{{ $json.email }}\",\n    \"city\": \"{{ $json.city }}\",\n    \"timestamp\": \"{{ $json.timestamp }}\",\n    \"email_sent\": true\n  }\n}",
+        "options": {}
+      },
+      "id": "email-already-sent-response-node",
+      "name": "Email Already Sent Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"success\": false,\n  \"message\": \"Invalid email address provided. Please enter a valid email address.\",\n  \"data\": {\n    \"email\": \"{{ $json.body.email }}\",\n    \"city\": \"{{ $json.body.city }}\",\n    \"fullName\": \"{{ $json.body.fullName }}\",\n    \"email_valid\": false,\n    \"timestamp\": \"{{ new Date().toISOString() }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "cb9e1532-2d10-48e4-8b8a-bafc05cd3e6f",
+      "name": "Invalid Email Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📧 Gmail OAuth2 Configuration\n\n**Setup Steps:**\n1. Enable Gmail API in Google Cloud Console\n2. Create OAuth2 credentials (Client ID + Secret)\n3. Add authorized redirect URI:\n   `http://localhost:5678/rest/oauth2-credential/callback`\n4. Configure Gmail credential in n8n\n5. Complete OAuth2 flow\n\n**Scopes Required:**\n- `https://www.googleapis.com/auth/gmail.send`\n\n**Features:**\n- Beautiful HTML template\n- Responsive design  \n- AQI color coding\n- AI commentary integration\n- OAuth2 security",
+        "height": 560,
+        "width": 440
+      },
+      "id": "387500c0-f060-4308-be50-9c5ac996cdcf",
+      "name": "📧 Gmail OAuth2 Config",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1080,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🗄️ Enhanced Supabase Integration\n\n**Database Schema Update:**\n\n\nRun the sql command in the codebase to create proper things in the supabse\n\n**Two-Stage Process:**\n1. **Initial Insert** (after weather fetch)\n   - Logs all submissions\n   - Includes validation status\n   - Records weather data (if available)\n\n2. **Update with AI Commentary** (after AI generation)\n   - Adds AI insights to existing record\n   - Matches by email + timestamp\n   - Completes the data record\n\n**Benefits:**\n- Complete audit trail\n- Fault tolerance\n- Enhanced analytics",
+        "height": 600,
+        "width": 360
+      },
+      "id": "411fd129-926a-4dde-b7ae-4473a3c8adf6",
+      "name": "🗄️ Enhanced Supabase",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔀 Enhanced Workflow with ID-Based Email Tracking\n\n**All submissions → Supabase**\n- Every form submission logged initially\n- Includes validation & weather status\n- New: email_sent tracking per record ID\n\n**Smart Duplicate Prevention:**\n- ✅ Valid email format check\n- 🌤 Weather data always processed\n- 🤖 AI Commentary always generated\n- 🔍 Check if THIS specific request already sent email\n- 📧 Send email only if not sent for this record ID\n- ✅ Mark specific record as sent after delivery\n- 🔄 Same user can get multiple emails for different requests\n\n**AI Commentary Process:**\n- Primary: OpenRouter/Gemini API\n- Fallback: Temperature-based logic\n- Always adds commentary to database\n\n**Error Handling:**\n- ❌ Invalid email → Error response\n- 🔄 Email already sent for this request → Skip email\n- 📊 All data logged in database\n- 🔄 Graceful fallbacks throughout",
+        "height": 480,
+        "width": 360
+      },
+      "id": "591e9bed-5786-4241-beb7-0fe0dad5a928",
+      "name": "🔀 Enhanced Logic Flow",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Setup Requirements\n\n**Environment Variables:**\n- `WEATHER_API_KEY`: WeatherAPI.com key\n- `OPENROUTER_API_KEY`: OpenRouter API key\n- Supabase URL & Key in node config\n- Gmail OAuth2 in credential manager\n\n**Database Setup:**\n- Update schema with `ai_commentary` column\n- Ensure proper indexing for performance\n- Configure Row Level Security if needed\n\n**Test Flow:**\n1. Submit valid form data\n2. Verify database logging\n3. Check email delivery\n4. Validate AI commentary storage",
+        "height": 440,
+        "width": 380
+      },
+      "id": "f48fde51-afdb-404c-accb-6c426c94ace1",
+      "name": "🚀 Setup Guide",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -280,
+        -280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Email Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Validation": {
+      "main": [
+        [
+          {
+            "node": "Fetch Weather Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Email Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Weather Data": {
+      "main": [
+        [
+          {
+            "node": "Process Weather Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Weather Data": {
+      "main": [
+        [
+          {
+            "node": "Store Initial Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store Initial Data": {
+      "main": [
+        [
+          {
+            "node": "Generate AI Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate AI Commentary": {
+      "main": [
+        [
+          {
+            "node": "Process AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process AI Response": {
+      "main": [
+        [
+          {
+            "node": "Store AI Commentary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store AI Commentary": {
+      "main": [
+        [
+          {
+            "node": "Send Weather Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Weather Email": {
+      "main": [
+        [
+          {
+            "node": "Preserve Record ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preserve Record ID": {
+      "main": [
+        [
+          {
+            "node": "Mark Email as Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Email as Sent": {
+      "main": [
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "95dc92cb4cfb9c25a2aaaadc889b98d8831d01195baaba80d8c5ddabbc1cf864"
+  }
+}
